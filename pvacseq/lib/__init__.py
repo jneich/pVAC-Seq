@@ -13,7 +13,8 @@ __all__ = [
     "parse_output",
     "valid_alleles",
     'net_chop',
-    "netmhc_stab"
+    "netmhc_stab",
+    "vaccine_design"
 ]
 
 from . import *
