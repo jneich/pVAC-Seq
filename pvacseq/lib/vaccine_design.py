@@ -374,6 +374,5 @@ def main(args_input=sys.argv[1:]):
         shutil.rmtree(tmp_dir)
 
 if __name__ == "__main__":
-    start_time = time.time()
     main()
-    print("--- %s seconds ---" % (time.time() - start_time))
+
