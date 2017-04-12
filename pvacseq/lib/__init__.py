@@ -14,6 +14,10 @@ __all__ = [
     "valid_alleles",
     'net_chop',
     "netmhc_stab",
+<<<<<<< ccbab4671eba569d5dc5cc2e4abbd58491abb7c9
+=======
+    "vaccine_design"
+>>>>>>> added vaccine design to __init__ file and added sub parser to pvacseq.py
 ]
 
 import os
