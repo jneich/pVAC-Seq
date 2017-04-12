@@ -4,13 +4,15 @@
 import shutil
 import sys
 from pathlib import Path
+root = str(Path(__file__).resolve().parents[1])
+sys.path.append(root)
+
 try:
     from .. import lib
 except ValueError:
     import lib
 
-root = str(Path(__file__).resolve().parents[1])
-sys.path.append(root)
+
 
 import pandas
 import networkx as nx
