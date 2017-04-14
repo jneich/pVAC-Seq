@@ -12,8 +12,6 @@ try:
 except ValueError:
     import lib
 
-
-
 import pandas
 import networkx as nx
 import itertools
@@ -36,7 +34,7 @@ def define_parser():
              " This will be used as a prefix for output files."
     )
     parser.add_argument('input_file', type=argparse.FileType('r'),
-                        help="Input FASTA file")
+                        help="Path to input FASTA file")
     parser.add_argument('method',
                         choices=PredictionClass.iedb_prediction_methods(),
                         help="The iedb analysis method to use")
