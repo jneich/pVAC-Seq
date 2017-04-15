@@ -1,5 +1,6 @@
 import unittest
 import tempfile
+import shutil
 import py_compile
 import subprocess
 from filecmp import cmp
@@ -63,4 +64,6 @@ class TestVaccineDesign(unittest.TestCase):
             os.path.join(output_dir, self.test_run_name + '.log'),
             os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.log')
         )
+
+        shutil.rmtree(output_dir)
 
