@@ -319,7 +319,7 @@ def main(args_input=sys.argv[1:]):
             distance_matrix[ID_1][ID_2] = Paths[ID_1][ID_2]['weight']
 
     init_state = seq_keys
-    random.shuffle(init_state)
+    #random.shuffle(init_state)      # This line helps, but makes unit testing very difficult
     peptide = OptimalPeptide(init_state, distance_matrix)
     peptide.copy_strategy = "slice"
     peptide.save_state_on_exit = False
