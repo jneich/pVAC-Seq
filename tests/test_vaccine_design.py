@@ -65,3 +65,4 @@ class TestVaccineDesign(unittest.TestCase):
             except AssertionError:
                 continue
 
+        shutil.rmtree(output_dir)
