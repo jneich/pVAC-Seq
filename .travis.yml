@@ -6,6 +6,8 @@ before_install:
   - pip install requests
   - pip install PyYAML
   - pip install pandas
+  - pip install networkx
+  - pip install biopython
 install: true
 script:
   - python3 -m unittest discover -v
