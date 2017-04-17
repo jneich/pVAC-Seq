@@ -5,6 +5,7 @@ before_install:
   - pip install PyVCF
   - pip install requests
   - pip install PyYAML
+  - pip install pandas
 install: true
 script:
   - python3 -m unittest discover -v
