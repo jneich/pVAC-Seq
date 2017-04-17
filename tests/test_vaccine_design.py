@@ -66,3 +66,4 @@ class TestVaccineDesign(unittest.TestCase):
                 continue
 
         shutil.rmtree(output_dir)
+        
