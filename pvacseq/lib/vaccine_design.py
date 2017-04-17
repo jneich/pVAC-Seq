@@ -56,8 +56,8 @@ def define_parser():
     parser.add_argument("-c", "--cutoff", type=int,
                         default=500,
                         help="Optional ic50 cutoff value." +
-                             " Neoepitopes with IC50 values below this " +
-                             " value will be labeled as problematic. Default: 500")
+                             " Junctional neoepitopes with IC50 values below this " +
+                             " value will be excluded. Default: 500")
     parser.add_argument(
         "-r", "--iedb-retries", type=int,
         default=5,

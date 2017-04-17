@@ -72,7 +72,7 @@ def main():
 
     parser.add_argument(
         "vaccine_design",
-        help="Generate optimal vaccine configuration from protein fasta.",
+        help="Generate an optimized ordering for peptides in a DNA vaccine",
         add_help=False)
 
     parser.add_argument(
