@@ -321,6 +321,7 @@ def main(args_input=sys.argv[1:]):
     peptide = OptimalPeptide(init_state, distance_matrix)
     peptide.copy_strategy = "slice"
     peptide.save_state_on_exit = False
+    # It would be nice if we kept calculating a path until the acceptance percentage is around 98%
     state, e = peptide.anneal()
     while state[0] != seq_keys[0]:
         state = state[1:] + state[:1]  # rotate key to start

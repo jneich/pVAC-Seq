@@ -75,6 +75,7 @@ def main():
         help="Generate an optimized ordering for peptides in a DNA vaccine", 
         add_help=False
     )
+    vaccine_design_parser.set_defaults(func=lib.vaccine_design)
 
     parser.add_argument(
         "-v", "--version",
