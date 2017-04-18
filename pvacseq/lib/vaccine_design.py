@@ -20,7 +20,7 @@ from simanneal import Annealer
 import random
 import math
 
-from prediction_class import *
+from lib.prediction_class import *
 
 
 def define_parser():
