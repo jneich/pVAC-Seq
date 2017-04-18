@@ -71,12 +71,6 @@ def main():
     config_files_parser.set_defaults(func=lib.config_files)
 
     parser.add_argument(
-        "vaccine_design",
-        help="Generate an optimized ordering for peptides in a DNA vaccine", 
-        add_help=False
-    )
-
-    parser.add_argument(
         "-v", "--version",
         action="store_true",
         help="Display the currently installed pvacseq version",
