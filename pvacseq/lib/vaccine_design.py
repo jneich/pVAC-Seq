@@ -3,7 +3,7 @@
 # python vaccine_design.py test peptides.fa -o output.csv ann  H-2-Kb -e 8
 import shutil
 import sys
-import argsparse
+import argparse
 import os
 from pathlib import Path
 root = str(Path(__file__).resolve().parents[1])
