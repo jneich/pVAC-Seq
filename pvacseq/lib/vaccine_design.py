@@ -17,7 +17,6 @@ import networkx as nx
 import itertools
 from Bio import SeqIO
 import lib
-from parse_output import *
 
 import time
 from simanneal import Annealer
