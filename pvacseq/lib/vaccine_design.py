@@ -123,7 +123,7 @@ class OptimalPeptide(Annealer):
             E = self.energy()
             dE = E - prevEnergy
             trials += 1
-            if dE < 0.0 and math.exp(-dE / T) > random.random():
+            if dE < 0.0 and math.exp(dE / T) > random.random():
                 # Restore previous state
                 self.state = self.copy_state(prevState)
                 E = prevEnergy
