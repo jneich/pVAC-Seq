@@ -112,8 +112,7 @@ class PVACTests(unittest.TestCase):
             "install_vep_plugin",
             "download_example_data",
             "valid_alleles",
-            "config_files",
-            "vaccine_design"
+            "config_files"
             ]:
             result = run([
                 sys.executable,

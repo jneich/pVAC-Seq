@@ -72,7 +72,9 @@ def main():
 
     parser.add_argument(
         "vaccine_design",
-        help="Generate an optimized ordering for peptides in a DNA vaccine")
+        help="Generate an optimized ordering for peptides in a DNA vaccine", 
+        add_help=False
+    )
 
     parser.add_argument(
         "-v", "--version",
