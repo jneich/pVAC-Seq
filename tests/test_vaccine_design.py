@@ -28,8 +28,8 @@ class TestVaccineDesign(unittest.TestCase):
         self.assertTrue(compiled_script_path)
 
     def test_vaccine_design_runs_and_produces_expected_output(self):
-        output_dir = tempfile.mkdtemp()
-        tempfile.tempdir = output_dir
+        output_dir = os.path.join(self.test_data_dir, tempfile.mkdtemp())
+        tempfile.tempdir = os.path.join(self.test_data_dir, output_dir)
 
         if self.python is None:
             raise Exception("Python could not be found!")

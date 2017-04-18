@@ -3,6 +3,8 @@
 # python vaccine_design.py test peptides.fa -o output.csv ann  H-2-Kb -e 8
 import shutil
 import sys
+import argsparse
+import os
 from pathlib import Path
 root = str(Path(__file__).resolve().parents[1])
 sys.path.append(root)
@@ -17,6 +19,8 @@ import time
 from simanneal import Annealer
 import random
 import math
+
+from prediction_class import *
 
 
 def define_parser():
