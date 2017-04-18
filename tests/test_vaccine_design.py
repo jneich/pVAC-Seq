@@ -2,6 +2,7 @@ import unittest
 import tempfile
 import py_compile
 import subprocess
+import shutil
 from filecmp import cmp
 import os
 import sys
