@@ -48,17 +48,17 @@ class TestVaccineDesign(unittest.TestCase):
                                    '-k', self.keep_tmp], shell=False)
 
                 self.assertTrue(cmp(
-                    os.path.join(output_dir, self.test_run_name, self.test_run_name + '_results.fa'),
+                    os.path.join(tempfile.gettempdir(), self.test_run_name, self.test_run_name + '_results.fa'),
                     os.path.join(self.test_data_dir, "Test.vaccine.results.output.fa")
                 ))
 
                 self.assertTrue(cmp(
-                    os.path.join(output_dir, self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
+                    os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
                     os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.epitopes.comb.fa')
                 ))
 
                 self.assertTrue(cmp(
-                    os.path.join(output_dir, self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
+                    os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
                     os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.iedb.results.csv')
                 ))
 
