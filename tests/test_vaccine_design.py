@@ -10,9 +10,9 @@ import sys
 class TestVaccineDesign(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        base_dir = os.path.join(base_dir, 'pvacseq', 'lib')
+        base_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
         cls.python = sys.executable
-        cls.executable_dir = os.path.join(base_dir, 'lib')
+        cls.executable_dir = os.path.join(base_dir, 'pvacseq', 'lib')
         cls.executable = os.path.join(cls.executable_dir, 'vaccine_design.py')
         cls.test_run_name = 'test_vaccine_design_produces_expected_output'
         cls.test_data_dir = os.path.join(base_dir, 'tests', 'test_data', 'vaccine_design')
