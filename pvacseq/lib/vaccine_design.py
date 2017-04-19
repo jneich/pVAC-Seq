@@ -40,7 +40,7 @@ def define_parser():
                         help="Allele for which to make prediction")
     parser.add_argument('-o', "--outdir", help="Output directory")
     parser.add_argument("-k", "--keep-tmp", default=False,
-                        help="Option to store tmp files in tmp directory. " +
+                        help="Option to store tmp files. " +
                              "Default: False")
     parser.add_argument(
         "-e", "--epitope-length",
@@ -123,7 +123,7 @@ class OptimalPeptide(Annealer):
             E = self.energy()
             dE = E - prevEnergy
             trials += 1
-            if dE < 0.0 and math.exp(dE / T) > random.random():
+            if dE < 0.0 and math.exp(dE / T) < random.random():
                 # Restore previous state
                 self.state = self.copy_state(prevState)
                 E = prevEnergy
