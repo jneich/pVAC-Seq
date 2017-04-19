@@ -23,6 +23,7 @@ class TestVaccineDesign(unittest.TestCase):
         cls.keep_tmp = 'True'
         cls.allele = 'H-2-Kb'
         cls.epitope_length = str(8)
+        cls.seed = 'True'
 
     def test_vaccine_design_compiles(self):
         compiled_script_path = py_compile.compile(self.executable)
@@ -32,39 +33,31 @@ class TestVaccineDesign(unittest.TestCase):
         output_dir = os.path.join(self.test_data_dir, tempfile.mkdtemp())
         tempfile.tempdir = os.path.join(self.test_data_dir, output_dir)
 
-        if self.python is None:
-            raise Exception("Python could not be found!")
+        subprocess.call([self.python,
+                           self.executable,
+                           self.test_run_name,
+                           self.input_file,
+                           self.method,
+                           self.allele,
+                           '-o', tempfile.gettempdir(),
+                           '-e', self.epitope_length,
+                           '-k', self.keep_tmp,
+                           '-s', self.seed], shell=False)
 
-        for i in range(0, 10):   # try this 10 times to make sure we pass once
+        self.assertTrue(cmp(
+            os.path.join(tempfile.gettempdir(), self.test_run_name, self.test_run_name + '_results.fa'),
+            os.path.join(self.test_data_dir, "Test.vaccine.results.output.fa")
+        ))
 
-            try:
-                subprocess.call([self.python,
-                                   self.executable,
-                                   self.test_run_name,
-                                   self.input_file,
-                                   self.method,
-                                   self.allele,
-                                   '-o', tempfile.gettempdir(),
-                                   '-e', self.epitope_length,
-                                   '-k', self.keep_tmp], shell=False)
+        self.assertTrue(cmp(
+            os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
+            os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.epitopes.comb.fa')
+        ))
 
-                self.assertTrue(cmp(
-                    os.path.join(tempfile.gettempdir(), self.test_run_name, self.test_run_name + '_results.fa'),
-                    os.path.join(self.test_data_dir, "Test.vaccine.results.output.fa")
-                ))
-
-                self.assertTrue(cmp(
-                    os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
-                    os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.epitopes.comb.fa')
-                ))
-
-                self.assertTrue(cmp(
-                    os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
-                    os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.iedb.results.csv')
-                ))
-
-            except AssertionError:
-                continue
+        self.assertTrue(cmp(
+            os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
+            os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.iedb.results.csv')
+        ))
 
         shutil.rmtree(output_dir)
         

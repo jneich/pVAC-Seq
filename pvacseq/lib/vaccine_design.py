@@ -1,6 +1,6 @@
 #  Input would be a protein fasta
 # ie:
-# python vaccine_design.py test peptides.fa -o output.csv ann  H-2-Kb -e 8
+# python vaccine_design.py test peptides.fa -o output.csv ann  H-2-Kb -l 8
 import shutil
 import sys
 import argparse
@@ -43,7 +43,7 @@ def define_parser():
                         help="Option to store tmp files. " +
                              "Default: False")
     parser.add_argument(
-        "-e", "--epitope-length",
+        "-l", "--epitope-length",
         type=lambda s: [int(epl) for epl in s.split(',')],
         help="Length of subpeptides (neoepitopes) to predict. " +
              "Multiple epitope lengths can be specified " +
@@ -63,6 +63,14 @@ def define_parser():
              " Must be less than or equal to 100." +
              "Default: 5"
     )
+     parser.add_argument(
+        "-e", "--iedb-executable-path",
+        help="The executable path of the local IEDB install"
+    )
+     parser.add_argument(
+        "-s", "--seed-rng", type=bool, default=False
+        help="Seed random number generator with default value 0.5 for unit test." +
+        " Default: False")
 
     return parser
 
@@ -176,6 +184,10 @@ def main(args_input=sys.argv[1:]):
     base_output_dir = os.path.abspath(outdir)
     tmp_dir = os.path.join(base_output_dir, runname, runname + '_tmp')
     os.makedirs(tmp_dir, exist_ok=True)
+
+    if args.seed_rng:
+        random.seed(0.5)
+
 
     #   Get fasta info
     peptides = SeqIO.parse(input_file, "fasta")
@@ -317,7 +329,8 @@ def main(args_input=sys.argv[1:]):
             distance_matrix[ID_1][ID_2] = Paths[ID_1][ID_2]['weight']
 
     init_state = seq_keys
-    #random.shuffle(init_state)      # This line helps, but makes unit testing very difficult
+    if not args.seed:
+        random.shuffle(init_state)   
     peptide = OptimalPeptide(init_state, distance_matrix)
     peptide.copy_strategy = "slice"
     peptide.save_state_on_exit = False
