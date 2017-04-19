@@ -70,7 +70,7 @@ def main():
     )
     config_files_parser.set_defaults(func=lib.config_files)
 
-    vaccine_design_parser = subparser.add_argument(
+    vaccine_design_parser = subparsers.add_argument(
         "vaccine_design",
         help="Generate an optimized ordering for peptides in a DNA vaccine", 
         add_help=False
