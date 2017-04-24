@@ -25,8 +25,8 @@ class TestVaccineDesign(unittest.TestCase):
         cls.epitope_length = str(8)
         cls.seed = 'True'
 
-    def test_vaccine_design_compiles(self):
-        self.assertTrue(py_compile.compile(self.executable))
+    # def test_vaccine_design_compiles(self):
+    #     self.assertTrue(py_compile.compile(self.executable))
 
     def test_vaccine_design_runs_and_produces_expected_output(self):
         output_dir = os.path.join(self.test_data_dir, tempfile.mkdtemp())
