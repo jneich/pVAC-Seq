@@ -68,7 +68,7 @@ def define_parser():
         help="The executable path of the local IEDB install"
     )
     parser.add_argument(
-        "-s", "--seed-rng", type=bool, default=False
+        "-s", "--seed-rng", type=bool, default=False,
         help="Seed random number generator with default value 0.5 for unit test." +
         " Default: False")
 
