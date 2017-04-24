@@ -63,11 +63,11 @@ def define_parser():
              " Must be less than or equal to 100." +
              "Default: 5"
     )
-     parser.add_argument(
+    parser.add_argument(
         "-e", "--iedb-executable-path",
         help="The executable path of the local IEDB install"
     )
-     parser.add_argument(
+    parser.add_argument(
         "-s", "--seed-rng", type=bool, default=False
         help="Seed random number generator with default value 0.5 for unit test." +
         " Default: False")
