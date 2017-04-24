@@ -184,6 +184,8 @@ def main(args_input=sys.argv[1:]):
     base_output_dir = os.path.abspath(outdir)
     tmp_dir = os.path.join(base_output_dir, runname, runname + '_tmp')
     os.makedirs(tmp_dir, exist_ok=True)
+    print("Base ouput dir:" + str(base_output_dir))
+    print("tmpdir:" + str(tmp_dir))
 
     if args.seed_rng:
         random.seed(0.5)
@@ -329,7 +331,7 @@ def main(args_input=sys.argv[1:]):
             distance_matrix[ID_1][ID_2] = Paths[ID_1][ID_2]['weight']
 
     init_state = seq_keys
-    if not args.seed:
+    if not args.seed_rng:
         random.shuffle(init_state)   
     peptide = OptimalPeptide(init_state, distance_matrix)
     peptide.copy_strategy = "slice"

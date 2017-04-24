@@ -22,7 +22,7 @@ class TestVaccineDesign(unittest.TestCase):
         cls.method = 'ann'
         cls.keep_tmp = 'True'
         cls.allele = 'H-2-Kb'
-        cls.epitope_length = str(8)
+        cls.epitope_length = '8'
         cls.seed = 'True'
 
     # def test_vaccine_design_compiles(self):
@@ -31,6 +31,7 @@ class TestVaccineDesign(unittest.TestCase):
     def test_vaccine_design_runs_and_produces_expected_output(self):
         output_dir = os.path.join(self.test_data_dir, tempfile.mkdtemp())
         tempfile.tempdir = os.path.join(self.test_data_dir, output_dir)
+        os.makedirs(os.path.join(self.test_data_dir, self.test_run_name))
 
         subprocess.call([self.python,
                            self.executable,
@@ -38,25 +39,25 @@ class TestVaccineDesign(unittest.TestCase):
                            self.input_file,
                            self.method,
                            self.allele,
-                           '-o', tempfile.gettempdir(),
+                           '-o', self.test_data_dir,
                            '-e', self.epitope_length,
                            '-k', self.keep_tmp,
                            '-s', self.seed], shell=False)
 
         self.assertTrue(cmp(
-            os.path.join(tempfile.gettempdir(), self.test_run_name, self.test_run_name + '_results.fa'),
+            os.path.join(self.test_data_dir, self.test_run_name, self.test_run_name + '_results.fa'),
             os.path.join(self.test_data_dir, "Test.vaccine.results.output.fa")
         ))
 
         self.assertTrue(cmp(
-            os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
+            os.path.join(self.test_data_dir, self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
             os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.epitopes.comb.fa')
         ))
 
         self.assertTrue(cmp(
-            os.path.join(tempfile.gettempdir(), self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
+            os.path.join(self.test_data_dir, self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
             os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.iedb.results.csv')
         ))
 
-        shutil.rmtree(output_dir)
+        shutil.rmtree(os.path.join(self.test_data_dir, self.test_run_name))
         
