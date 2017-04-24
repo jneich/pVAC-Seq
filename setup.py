@@ -44,7 +44,8 @@ setup(
         'connexion',
         'pandas',
         'networkx',
-        'biopython'
+        'biopython',
+        'simanneal'
     ],
     package_data={
         'pvacseq' : data_files,
