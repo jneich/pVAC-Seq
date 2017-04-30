@@ -11,13 +11,13 @@ import sys
 class TestVaccineDesign(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        base_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+        cls.base_dir = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
         cls.python = sys.executable
-        cls.executable_dir = os.path.join(base_dir, 'pvacseq', 'lib')
+        cls.executable_dir = os.path.join(cls.base_dir, 'pvacseq', 'lib')
         cls.executable = os.path.join(cls.executable_dir, 'vaccine_design.py')
         cls.test_run_name = 'test_vaccine_design_produces_expected_output'
-        cls.test_data_dir = os.path.join(base_dir, 'tests', 'test_data', 'vaccine_design')
-        cls.test_data_temp_dir = os.path.join(base_dir, 'tests', 'test_data', 'vaccine_design', 'tmp')
+        cls.test_data_dir = os.path.join(cls.base_dir, 'tests', 'test_data', 'vaccine_design')
+        cls.test_data_temp_dir = os.path.join(cls.test_data_dir, 'tmp')
         cls.input_file = os.path.join(cls.test_data_dir, 'Test.vaccine.results.input.fa')
         cls.method = 'ann'
         cls.keep_tmp = 'True'
@@ -29,35 +29,27 @@ class TestVaccineDesign(unittest.TestCase):
     #     self.assertTrue(py_compile.compile(self.executable))
 
     def test_vaccine_design_runs_and_produces_expected_output(self):
-        output_dir = os.path.join(self.test_data_dir, tempfile.mkdtemp())
-        tempfile.tempdir = os.path.join(self.test_data_dir, output_dir)
-        os.makedirs(os.path.join(self.test_data_dir, self.test_run_name))
+        output_dir = tempfile.TemporaryDirectory()
+        #output_dir = "/Users/Jonas/Desktop"
+        #tempfile.tempdir = os.path.join(self.test_data_dir, output_dir)
+        #os.makedirs(os.path.join(self.test_data_dir, self.test_run_name))
 
-        subprocess.call([self.python,
+        call = subprocess.call([self.python,
                            self.executable,
                            self.test_run_name,
                            self.input_file,
                            self.method,
                            self.allele,
-                           '-o', self.test_data_dir,
-                           '-e', self.epitope_length,
-                           '-k', self.keep_tmp,
-                           '-s', self.seed], shell=False)
+                           '-o', output_dir.name,
+                           '-l', self.epitope_length,
+                           '-k',
+                           '-s'], shell=False)
 
         self.assertTrue(cmp(
-            os.path.join(self.test_data_dir, self.test_run_name, self.test_run_name + '_results.fa'),
+            os.path.join(output_dir.name, self.test_run_name, self.test_run_name + '_results.fa'),
             os.path.join(self.test_data_dir, "Test.vaccine.results.output.fa")
         ))
 
-        self.assertTrue(cmp(
-            os.path.join(self.test_data_dir, self.test_run_name, 'tmp', self.test_run_name + '_epitopes.fa'),
-            os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.epitopes.comb.fa')
-        ))
-
-        self.assertTrue(cmp(
-            os.path.join(self.test_data_dir, self.test_run_name, 'tmp', self.test_run_name + '_iedb_out.csv'),
-            os.path.join(self.test_data_temp_dir, 'Test.vaccine.design.iedb.results.csv')
-        ))
-
-        shutil.rmtree(os.path.join(self.test_data_dir, self.test_run_name))
+        output_dir.cleanup()
+        #shutil.rmtree(os.path.join(self.test_data_dir, self.test_run_name))
         

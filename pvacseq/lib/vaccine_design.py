@@ -39,9 +39,8 @@ def define_parser():
     parser.add_argument('allele',
                         help="Allele for which to make prediction")
     parser.add_argument('-o', "--outdir", help="Output directory")
-    parser.add_argument("-k", "--keep-tmp", default=False,
-                        help="Option to store tmp files. " +
-                             "Default: False")
+    parser.add_argument('-k', "--keep-tmp",
+                        help="Option to store tmp files. ", action="store_true")
     parser.add_argument(
         "-l", "--epitope-length",
         type=lambda s: [int(epl) for epl in s.split(',')],
@@ -68,10 +67,10 @@ def define_parser():
         help="The executable path of the local IEDB install"
     )
     parser.add_argument(
-        "-s", "--seed-rng", type=bool, default=False,
+        "-s", "--seed-rng", action="store_true",
         help="Seed random number generator with default value 0.5 for unit test." +
         " Default: False")
-
+    
     return parser
 
 
@@ -192,10 +191,13 @@ def main(args_input=sys.argv[1:]):
 
 
     #   Get fasta info
+   
     peptides = SeqIO.parse(input_file, "fasta")
+   
     seq_dict = dict()
     for record in peptides:
         seq_dict[record.id] = str(record.seq)
+    
     # Get a list of sequence keys
     seq_keys = sorted(seq_dict)
 
