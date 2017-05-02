@@ -245,7 +245,8 @@ def main(args_input=sys.argv[1:]):
                 iedb_method,
                 a,
                 '-l', str(l),
-                '-r', str(args.iedb_retries)
+                '-r', str(args.iedb_retries), 
+                '-e', args.iedb_executable_path
             ])
             with open(outfile, 'rU') as sheet:
                 split_out.append(pandas.read_csv(sheet, delimiter='\t'))
