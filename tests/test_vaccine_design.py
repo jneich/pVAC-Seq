@@ -25,14 +25,11 @@ class TestVaccineDesign(unittest.TestCase):
         cls.epitope_length = '8'
         cls.seed = 'True'
 
-    # def test_vaccine_design_compiles(self):
-    #     self.assertTrue(py_compile.compile(self.executable))
+    def test_vaccine_design_compiles(self):
+        self.assertTrue(py_compile.compile(self.executable))
 
     def test_vaccine_design_runs_and_produces_expected_output(self):
         output_dir = tempfile.TemporaryDirectory()
-        #output_dir = "/Users/Jonas/Desktop"
-        #tempfile.tempdir = os.path.join(self.test_data_dir, output_dir)
-        #os.makedirs(os.path.join(self.test_data_dir, self.test_run_name))
 
         call = subprocess.call([self.python,
                            self.executable,
@@ -51,5 +48,4 @@ class TestVaccineDesign(unittest.TestCase):
         ))
 
         output_dir.cleanup()
-        #shutil.rmtree(os.path.join(self.test_data_dir, self.test_run_name))
         

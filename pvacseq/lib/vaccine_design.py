@@ -1,6 +1,5 @@
 #  Input would be a protein fasta
-# ie:
-# python vaccine_design.py test peptides.fa -o output.csv ann  H-2-Kb -l 8
+# python vaccine_design.py test peptides.fa ann H-2-Kb -o /Users/user/Desktop -l 8
 import shutil
 import sys
 import argparse
@@ -183,34 +182,29 @@ def main(args_input=sys.argv[1:]):
     base_output_dir = os.path.abspath(outdir)
     tmp_dir = os.path.join(base_output_dir, runname, runname + '_tmp')
     os.makedirs(tmp_dir, exist_ok=True)
-    print("Base ouput dir:" + str(base_output_dir))
-    print("tmpdir:" + str(tmp_dir))
 
     if args.seed_rng:
         random.seed(0.5)
 
-
-    #   Get fasta info
-   
     peptides = SeqIO.parse(input_file, "fasta")
    
     seq_dict = dict()
     for record in peptides:
         seq_dict[record.id] = str(record.seq)
-    
-    # Get a list of sequence keys
-    seq_keys = sorted(seq_dict)
 
+    seq_keys = sorted(seq_dict)
     seq_tuples = list(itertools.combinations_with_replacement(seq_keys, 2))
     combinations = list()
+
     for key in seq_tuples:
         if key[0] != key[1]:
             combinations.append((key[0], key[1]))
             combinations.append((key[1], key[0]))
+    
     seq_tuples = combinations
-
     epitopes = dict()
     rev_lookup = dict()
+
     for comb in seq_tuples:
         seq1 = comb[0]
         seq2 = comb[1]
@@ -232,13 +226,12 @@ def main(args_input=sys.argv[1:]):
         for each in epitopes:
             tmp.write(">" + each + "\n" + epitopes[each] + "\n")
 
-    # now we call iedb on the tmp fasta
     outfile = os.path.join(tmp_dir, runname + '_iedb_out.csv')
     split_out = []
+
     for a in alleles:
         for l in epl:
             print ("Calling iedb for " + a + " of length " + str(l))
-            #FIXME need to provide option for local iedb install if available
             lib.call_iedb.main([
                 epitopes_file,
                 outfile,
@@ -252,6 +245,7 @@ def main(args_input=sys.argv[1:]):
                 split_out.append(pandas.read_csv(sheet, delimiter='\t'))
 
     print("IEDB calls complete. Merging data.")
+
     with open(outfile, 'rU') as sheet:
         split_out.append(pandas.read_csv(sheet, delimiter='\t'))
     epitope_binding = pandas.concat(split_out)
@@ -339,10 +333,9 @@ def main(args_input=sys.argv[1:]):
     peptide = OptimalPeptide(init_state, distance_matrix)
     peptide.copy_strategy = "slice"
     peptide.save_state_on_exit = False
-    # It would be nice if we kept calculating a path until the acceptance percentage is around 98%
     state, e = peptide.anneal()
     while state[0] != seq_keys[0]:
-        state = state[1:] + state[:1]  # rotate key to start
+        state = state[1:] + state[:1] 
     print("%i distance :" % e)
 
     for id in state:
