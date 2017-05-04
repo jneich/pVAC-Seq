@@ -67,7 +67,8 @@ class CallIEDBClassITests(CallIEDBTests):
                 'sequence_text':reader.read(),
                 'method': method,
                 'allele': self.allele,
-                'length': self.epitope_length
+                'length': self.epitope_length,
+                'user_tool': 'pVac-seq',
             })
             reader.close()
             expected_output_file = os.path.join(self.test_data_dir, 'output_%s.tsv' % method)
@@ -99,6 +100,7 @@ class CallIEDBClassIITests(CallIEDBTests):
                 'sequence_text':reader.read(),
                 'method': method,
                 'allele': self.allele,
+                'user_tool': 'pVac-seq',
             })
             reader.close()
             expected_output_file = os.path.join(self.test_data_dir, 'output_%s.tsv' % method)

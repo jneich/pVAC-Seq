@@ -5,13 +5,15 @@ import csv
 
 try:
     from .. import lib
-except (ImportError, SystemError, ValueError):
+except ValueError:
     import lib
 from lib.prediction_class import *
 from lib.input_file_converter import *
 from lib.fasta_generator import *
 from lib.output_parser import *
 import shutil
+import yaml
+import pkg_resources
 
 def status_message(msg):
     print(msg)
@@ -48,6 +50,7 @@ class Pipeline(metaclass=ABCMeta):
         self.trna_cov                    = kwargs['trna_cov']
         self.trna_vaf                    = kwargs['trna_vaf']
         self.expn_val                    = kwargs['expn_val']
+        self.additional_report_columns   = kwargs['additional_report_columns']
         self.fasta_size                  = kwargs['fasta_size']
         self.iedb_retries                = kwargs['iedb_retries']
         self.downstream_sequence_length  = kwargs['downstream_sequence_length']
@@ -55,6 +58,46 @@ class Pipeline(metaclass=ABCMeta):
         tmp_dir = os.path.join(self.output_dir, 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
         self.tmp_dir = tmp_dir
+
+    def log_dir(self):
+        dir = os.path.join(self.output_dir, 'log')
+        os.makedirs(dir, exist_ok=True)
+        return dir
+
+    def print_log(self):
+        log_file = os.path.join(self.log_dir(), 'inputs.yml')
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as log_fh:
+                past_inputs = yaml.load(log_fh)
+                current_inputs = self.__dict__
+                current_inputs['pvacseq_version'] = pkg_resources.get_distribution("pvacseq").version
+                if past_inputs['pvacseq_version'] != current_inputs['pvacseq_version']:
+                    status_message(
+                        "Restart to be executed with a different pVAC-Seq version:\n" +
+                        "Past version: %s\n" % past_inputs['pvacseq_version'] +
+                        "Current version: %s" % current_inputs['pvacseq_version']
+                    )
+                for key in current_inputs.keys():
+                    if key == 'pvacseq_version':
+                        continue
+                    if key not in past_inputs.keys() and current_inputs[key] is not None:
+                        sys.exit(
+                            "Restart inputs are different from past inputs: \n" +
+                            "Additional input: %s - %s\n" % (key, current_inputs[key]) +
+                            "Aborting."
+                        )
+                    elif current_inputs[key] != past_inputs[key]:
+                        sys.exit(
+                            "Restart inputs are different from past inputs: \n" +
+                            "Past input: %s - %s\n" % (key, past_inputs[key]) +
+                            "Current input: %s - %s\n" % (key, current_inputs[key]) +
+                            "Aborting."
+                        )
+        else:
+            with open(log_file, 'w') as log_fh:
+                inputs = self.__dict__
+                inputs['pvacseq_version'] = pkg_resources.get_distribution("pvacseq").version
+                yaml.dump(inputs, log_fh, default_flow_style=False)
 
     def tsv_file_path(self):
         tsv_file = self.sample_name + '.tsv'
@@ -198,7 +241,8 @@ class Pipeline(metaclass=ABCMeta):
         status_message("Combining Parsed IEDB Output Files")
         lib.combine_parsed_outputs.main([
             *split_parsed_output_files,
-            self.combined_parsed_path()
+            self.combined_parsed_path(),
+            '--top-score-metric', self.top_score_metric,
         ])
         status_message("Completed")
 
@@ -274,6 +318,7 @@ class Pipeline(metaclass=ABCMeta):
         return os.path.join(self.output_dir, self.sample_name+".final.tsv")
 
     def execute(self):
+        self.print_log()
         self.convert_vcf()
 
         total_row_count = self.tsv_entry_count()
@@ -392,6 +437,14 @@ class MHCIPipeline(Pipeline):
                             split_iedb_output_files.append(split_iedb_out)
                             continue
                         status_message("Running IEDB on Allele %s and Epitope Length %s with Method %s - Entries %s" % (a, epl, method, fasta_chunk))
+
+                        if not os.environ.get('TEST_FLAG') or os.environ.get('TEST_FLAG') == '0':
+                            if 'last_execute_timestamp' in locals() and not self.iedb_executable:
+                                elapsed_time = ( datetime.datetime.now() - last_execute_timestamp ).total_seconds()
+                                wait_time = 60 - elapsed_time
+                                if wait_time > 0:
+                                    time.sleep(wait_time)
+
                         lib.call_iedb.main([
                             split_fasta_file_path,
                             split_iedb_out,
@@ -401,6 +454,7 @@ class MHCIPipeline(Pipeline):
                             '-r', str(self.iedb_retries),
                             '-e', self.iedb_executable,
                         ])
+                        last_execute_timestamp = datetime.datetime.now()
                         status_message("Completed")
                         split_iedb_output_files.append(split_iedb_out)
 
@@ -422,6 +476,10 @@ class MHCIPipeline(Pipeline):
                             'top_score_metric'       : self.top_score_metric,
                             'top_result_per_mutation': self.top_result_per_mutation
                         }
+                        if self.additional_report_columns and 'sample_name' in self.additional_report_columns:
+                            params['sample_name'] = self.sample_name
+                        else:
+                            params['sample_name'] = None
                         parser = self.output_parser(params)
                         parser.execute()
                         status_message("Completed")
@@ -481,6 +539,14 @@ class MHCIIPipeline(Pipeline):
                         split_iedb_output_files.append(split_iedb_out)
                         continue
                     status_message("Running IEDB on Allele %s with Method %s - Entries %s" % (a, method, fasta_chunk))
+
+                    if not os.environ.get('TEST_FLAG') or os.environ.get('TEST_FLAG') == '0':
+                        if 'last_execute_timestamp' in locals() and not self.iedb_executable:
+                            elapsed_time = ( datetime.datetime.now() - last_execute_timestamp ).total_seconds()
+                            wait_time = 60 - elapsed_time
+                            if wait_time > 0:
+                                time.sleep(wait_time)
+
                     lib.call_iedb.main([
                         split_fasta_file_path,
                         split_iedb_out,
@@ -489,6 +555,7 @@ class MHCIIPipeline(Pipeline):
                         '-r', str(self.iedb_retries),
                         '-e', self.iedb_executable,
                     ])
+                    last_execute_timestamp = datetime.datetime.now()
                     status_message("Completed")
                     split_iedb_output_files.append(split_iedb_out)
 
@@ -510,6 +577,10 @@ class MHCIIPipeline(Pipeline):
                         'top_score_metric'       : self.top_score_metric,
                         'top_result_per_mutation': self.top_result_per_mutation
                     }
+                    if self.additional_report_columns and 'sample_name' in self.additional_report_columns:
+                        params['sample_name'] = self.sample_name
+                    else:
+                        params['sample_name'] = None
                     parser = self.output_parser(params)
                     parser.execute()
                     status_message("Completed")

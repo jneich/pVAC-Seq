@@ -29,7 +29,7 @@ for dirpath, dirnames, filenames in os.walk("pvacseq/server"):
 
 setup(
     name="pvacseq",
-    version="4.0.6",
+    version="4.0.9",
     packages=["pvacseq", "pvacseq.lib", "pvacseq.server"],
     entry_points={
         "console_scripts":[
@@ -41,11 +41,7 @@ setup(
         'PyVCF',
         'requests',
         'PyYAML',
-        'connexion',
-        'pandas',
-        'networkx',
-        'biopython',
-        'simanneal'
+        'connexion'
     ],
     package_data={
         'pvacseq' : data_files,

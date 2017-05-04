@@ -8,8 +8,6 @@ from statistics import median
 from lib.prediction_class import *
 import yaml
 
-from abc import ABCMeta
-
 csv.field_size_limit(sys.maxsize)
 
 class OutputParser(metaclass=ABCMeta):
@@ -20,6 +18,7 @@ class OutputParser(metaclass=ABCMeta):
         self.output_file             = kwargs['output_file']
         self.top_result_per_mutation = kwargs['top_result_per_mutation']
         self.top_score_metric        = kwargs['top_score_metric']
+        self.sample_name             = kwargs['sample_name']
 
     def parse_input_tsv_file(self):
         with open(self.input_tsv_file, 'r') as reader:
@@ -50,28 +49,57 @@ class OutputParser(metaclass=ABCMeta):
                 break
         return consecutive_matches
 
+    def determine_total_matches(self, mt_epitope_seq, wt_epitope_seq):
+        matches = 0
+        for a, b in zip(mt_epitope_seq, wt_epitope_seq):
+            if a == b:
+                matches += 1
+        return matches
+
     def find_mutation_position(self, wt_epitope_seq, mt_epitope_seq):
         for i,(wt_aa,mt_aa) in enumerate(zip(wt_epitope_seq,mt_epitope_seq)):
             if wt_aa != mt_aa:
                 return i+1
         return 0
 
-    def match_wildtype_and_mutant_entry_for_missense(self, result, mt_position, wt_results):
+    def match_wildtype_and_mutant_entry_for_missense(self, result, mt_position, wt_results, previous_result):
         #The WT epitope at the same position is the match
         match_position = mt_position
-        result['wt_epitope_seq']    = wt_results[match_position]['wt_epitope_seq']
-        result['wt_scores']         = wt_results[match_position]['wt_scores']
-        result['mutation_position'] = self.find_mutation_position(result['wt_epitope_seq'], result['mt_epitope_seq'])
+        mt_epitope_seq = result['mt_epitope_seq']
+        wt_result      = wt_results[match_position]
+        wt_epitope_seq = wt_result['wt_epitope_seq']
+        total_matches  = self.determine_total_matches(mt_epitope_seq, wt_epitope_seq)
+        if total_matches >= self.min_match_count(int(result['peptide_length'])):
+            result['wt_epitope_seq'] = wt_epitope_seq
+            result['wt_scores']      = wt_result['wt_scores']
+        else:
+            result['wt_epitope_seq'] = 'NA'
+            result['wt_scores']      = dict.fromkeys(result['mt_scores'].keys(), 'NA')
+
+        if mt_epitope_seq == wt_epitope_seq:
+            result['mutation_position'] = 'NA'
+        else:
+            if previous_result:
+                previous_mutation_position = previous_result['mutation_position']
+                if previous_mutation_position == 'NA':
+                    result['mutation_position'] = self.find_mutation_position(wt_epitope_seq, mt_epitope_seq)
+                elif previous_mutation_position > 0:
+                    result['mutation_position'] = previous_mutation_position - 1
+                else:
+                    result['mutation_position'] = 0
+            else:
+                result['mutation_position'] = self.find_mutation_position(wt_epitope_seq, mt_epitope_seq)
 
     def match_wildtype_and_mutant_entry_for_frameshift(self, result, mt_position, wt_results, previous_result):
         #The WT epitope at the same position is the match
         match_position = mt_position
-
         #Since the MT sequence is longer than the WT sequence, not all MT epitopes have a match
         if match_position not in wt_results:
             result['wt_epitope_seq'] = 'NA'
             result['wt_scores']      = dict.fromkeys(result['mt_scores'].keys(), 'NA')
-            if previous_result['mutation_position'] > 0:
+            if previous_result['mutation_position'] == 'NA':
+                result['mutation_position'] = 'NA'
+            elif previous_result['mutation_position'] > 0:
                 result['mutation_position'] = previous_result['mutation_position'] - 1
             else:
                 result['mutation_position'] = 0
@@ -86,9 +114,9 @@ class OutputParser(metaclass=ABCMeta):
             result['wt_scores']         = wt_result['wt_scores']
             result['mutation_position'] = 'NA'
         else:
-            #Determine how many consecutive amino acids are the same between the MT epitope and its matching WT epitope
-            consecutive_matches = self.determine_consecutive_matches_from_left(mt_epitope_seq, wt_epitope_seq)
-            if consecutive_matches >= self.min_match_count(int(result['peptide_length'])):
+            #Determine how many amino acids are the same between the MT epitope and its matching WT epitope
+            total_matches = self.determine_total_matches(mt_epitope_seq, wt_epitope_seq)
+            if total_matches >= self.min_match_count(int(result['peptide_length'])):
                 #The minimum amino acid match count is met
                 result['wt_epitope_seq'] = wt_result['wt_epitope_seq']
                 result['wt_scores']      = wt_result['wt_scores']
@@ -117,8 +145,8 @@ class OutputParser(metaclass=ABCMeta):
 
             #We need to ensure that the matched WT eptiope has enough overlapping amino acids with the MT epitope
             best_match_wt_result = wt_results[str(best_match_position)]
-            best_match_count     = self.determine_consecutive_matches_from_right(result['mt_epitope_seq'], best_match_wt_result['wt_epitope_seq'])
-            if best_match_count and best_match_count >= self.min_match_count(int(result['peptide_length'])):
+            total_matches        = self.determine_total_matches(result['mt_epitope_seq'], best_match_wt_result['wt_epitope_seq'])
+            if total_matches and total_matches >= self.min_match_count(int(result['peptide_length'])):
                 #The minimum amino acid match count is met
                 result['wt_epitope_seq'] = best_match_wt_result['wt_epitope_seq']
                 result['wt_scores']      = best_match_wt_result['wt_scores']
@@ -175,7 +203,6 @@ class OutputParser(metaclass=ABCMeta):
                 #We then check if the alternate best match epitope has more matching amino acids than the baseline best match epitope
                 #If it does, we pick it as the best match
                 if consecutive_matches_from_right > best_match_count:
-                    best_match_count     = consecutive_matches_from_right
                     match_direction      = 'right'
                     best_match_position  = alternate_best_match_position
                     best_match_wt_result = alternate_best_match_wt_result
@@ -189,7 +216,8 @@ class OutputParser(metaclass=ABCMeta):
                 best_match_wt_result = baseline_best_match_wt_result
 
             #Now that we have found the matching WT epitope we still need to ensure that it has enough overlapping amino acids
-            if best_match_count and best_match_count >= self.min_match_count(int(result['peptide_length'])):
+            total_matches = self.determine_total_matches(mt_epitope_seq, best_match_wt_result['wt_epitope_seq'])
+            if total_matches and total_matches >= self.min_match_count(int(result['peptide_length'])):
                 #The minimum amino acid match count is met
                 result['wt_epitope_seq'] = best_match_wt_result['wt_epitope_seq']
                 result['wt_scores']      = best_match_wt_result['wt_scores']
@@ -216,7 +244,7 @@ class OutputParser(metaclass=ABCMeta):
                 previous_result = None
             wt_results = wt_iedb_results[wt_iedb_result_key]
             if result['variant_type'] == 'missense':
-                self.match_wildtype_and_mutant_entry_for_missense(result, mt_position, wt_results)
+                self.match_wildtype_and_mutant_entry_for_missense(result, mt_position, wt_results, previous_result)
             elif result['variant_type'] == 'FS':
                 self.match_wildtype_and_mutant_entry_for_frameshift(result, mt_position, wt_results, previous_result)
             elif result['variant_type'] == 'inframe_ins' or result['variant_type'] == 'inframe_del':
@@ -296,30 +324,6 @@ class OutputParser(metaclass=ABCMeta):
 
         return flattened_iedb_results
 
-    def sort_iedb_results(self, flattened_iedb_results):
-        if self.top_score_metric == 'median':
-            sorted_iedb_results = sorted(
-                flattened_iedb_results,
-                key=lambda flattened_iedb_results: (
-                    flattened_iedb_results[0],
-                    flattened_iedb_results[1],
-                    flattened_iedb_results[14],
-                    " ".join(str(item) for item in flattened_iedb_results),
-                )
-            )
-        elif self.top_score_metric == 'lowest':
-            sorted_iedb_results = sorted(
-                flattened_iedb_results,
-                key=lambda flattened_iedb_results: (
-                    flattened_iedb_results[0],
-                    flattened_iedb_results[1],
-                    flattened_iedb_results[11],
-                    " ".join(str(item) for item in flattened_iedb_results),
-                )
-            )
-
-        return sorted_iedb_results
-
     def process_input_iedb_file(self, tsv_entries):
         iedb_results              = self.parse_iedb_file(tsv_entries)
         iedb_results_with_metrics = self.add_summary_metrics(iedb_results)
@@ -328,9 +332,8 @@ class OutputParser(metaclass=ABCMeta):
             flattened_iedb_results = self.flatten_iedb_results(filtered_iedb_results)
         else:
             flattened_iedb_results = self.flatten_iedb_results(iedb_results_with_metrics)
-        sorted_iedb_results       = self.sort_iedb_results(flattened_iedb_results)
 
-        return sorted_iedb_results
+        return flattened_iedb_results
 
     def base_headers(self):
         return[
@@ -375,6 +378,8 @@ class OutputParser(metaclass=ABCMeta):
             pretty_method = PredictionClass.prediction_class_name_for_iedb_prediction_method(method)
             headers.append("%s WT Score" % pretty_method)
             headers.append("%s MT Score" % pretty_method)
+        if self.sample_name:
+            headers.append("Sample Name")
 
         return headers
 
@@ -449,8 +454,14 @@ class OutputParser(metaclass=ABCMeta):
                 }
                 for method in self.prediction_methods():
                     pretty_method = PredictionClass.prediction_class_name_for_iedb_prediction_method(method)
-                    row["%s WT Score" % pretty_method] = wt_scores[method]
-                    row["%s MT Score" % pretty_method] = mt_scores[method]
+                    if method in wt_scores:
+                        row["%s WT Score" % pretty_method] = wt_scores[method]
+                    else:
+                        row["%s WT Score" % pretty_method] = 'NA'
+                    if method in mt_scores:
+                        row["%s MT Score" % pretty_method] = mt_scores[method]
+                    else:
+                        row["%s MT Score" % pretty_method] = 'NA'
                 if 'gene_expression' in tsv_entry:
                     row['Gene Expression'] = tsv_entry['gene_expression']
                 if 'transcript_expression' in tsv_entry:
@@ -467,6 +478,8 @@ class OutputParser(metaclass=ABCMeta):
                     row['Tumor RNA Depth'] = tsv_entry['trna_depth']
                 if 'trna_vaf' in tsv_entry:
                     row['Tumor RNA VAF'] = tsv_entry['trna_vaf']
+                if self.sample_name:
+                    row['Sample Name'] = self.sample_name
                 if 'fusion_position' in tsv_entry:
                     row['Fusion Position'] = tsv_entry['fusion_position']
                 else:
@@ -488,7 +501,9 @@ class DefaultOutputParser(OutputParser):
                 (sample, method, remainder) = os.path.basename(input_iedb_file).split(".", 2)
                 for line in iedb_tsv_reader:
                     protein_label  = int(line['seq_num'])
-                    if 'core_peptide' in line:
+                    if 'core_peptide' in line and int(line['end']) - int(line['start']) == 8:
+                        #Start and end refer to the position of the core peptide
+                        #Infer the (start) position of the peptide from the positions of the core peptide
                         position   = str(int(line['start']) - line['peptide'].find(line['core_peptide']))
                     else:
                         position   = line['start']
